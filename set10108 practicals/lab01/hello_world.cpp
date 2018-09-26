@@ -5,8 +5,6 @@
 
 #include <thread>
 
-using namespace std;
-
 void hello_world() {
 	std::cout << "Hello world from thread " << std::this_thread::get_id() << std::endl;
 }

@@ -3,6 +3,9 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
+# set c++ standard
+set (CMAKE_CXX_STANDARD 11)
+
 project ("set10108 practicals")
 
 # Include sub-projects.
