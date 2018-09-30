@@ -36,7 +36,7 @@ int main() {
 
 			std::vector<std::thread> threads;
 			for (size_t n = 0; n < total_threads; ++n) 
-				threads.emplace_back(monte_carlo_pi, static_cast<unsigned int>(pow(2.0, 24.0 - num_threads)));
+				threads.emplace_back(monte_carlo_pi, static_cast<unsigned int>(pow(2.0, 24 - num_threads)));
 			
 			for (auto &t : threads)
 				t.join();
