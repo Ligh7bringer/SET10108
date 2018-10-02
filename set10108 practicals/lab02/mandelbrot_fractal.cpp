@@ -6,6 +6,7 @@
 #include <string>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STBI_MSC_SECURE_CRT
 #include "../../lib/stb_image_write.h"
 
 // max iterations to perform to find pixel value
@@ -50,7 +51,7 @@ std::vector<double> mandelbrot(size_t start_y, size_t end_y) {
             // get number of iterations of the loop
             auto val = static_cast<double>(loop_count) / static_cast<double>(max_iterations);
             // push into the vector
-            results.push_back(val);
+            results.push_back(val*255);
             // increase x based on the integral
             x += integral_x;
         }
@@ -83,13 +84,14 @@ int main() {
         results.push_back(f.get());
 
     // create image from the generated data
-    for(unsigned int i = 0; i < results.size(); ++i) {
+    for(size_t i = 0; i < results.size(); ++i) {
         auto filename = std::to_string(i) + ".png";
-        std::cout << "Writing image " << filename << std::endl;
-        if(!stbi_write_png(filename.c_str(), dim, static_cast<int>(strip_height), 4, &results[i].front(), 0))
-            std::cout << "Error creating image " << filename << std::endl;
+        std::cout << "Writing image " << filename << "..." << std::endl;
+        if(!stbi_write_png(filename.c_str(), dim, static_cast<int>(strip_height), 4, &results[i][0], sizeof(double) * dim))
+            std::cout << "Error writing image " << filename << std::endl;
     }
 
     std::cout << "Done!" << std::endl;
+
     return 0;
 }
