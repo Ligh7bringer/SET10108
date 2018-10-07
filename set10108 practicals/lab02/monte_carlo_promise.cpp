@@ -28,7 +28,7 @@ void monte_carlo_pi(size_t iterations, std::promise<double> pi) {
 }
 
 int main() {
-    std::ofstream data("montecarlo.csv", std::ofstream::out);
+    std::ofstream data("montecarlo-promise.csv", std::ofstream::out);
 
     for (size_t num_threads = 0; num_threads <= 6; ++num_threads) {
         auto total_threads = static_cast<unsigned int>(pow(2.0, num_threads));

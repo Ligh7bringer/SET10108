@@ -26,7 +26,7 @@ void monte_carlo_pi(size_t iterations) {
 int main() {
 	std::ofstream data("montecarlo.csv", std::ofstream::out);
 
-	for (size_t num_threads = std::thread::hardware_concurrency(); num_threads <= std::thread::hardware_concurrency(); ++num_threads) {
+	for (size_t num_threads = 0; num_threads <= std::thread::hardware_concurrency(); ++num_threads) {
 		auto total_threads = static_cast<unsigned int>(pow(2.0, num_threads));
 		std::cout << "Number of threads is " << total_threads << std::endl;
 		data << "num_threads_" << total_threads << std::endl;
@@ -44,7 +44,7 @@ int main() {
 			auto end = std::chrono::system_clock::now();
 			auto total = end - start;
 			auto result = std::chrono::duration_cast<std::chrono::milliseconds>(total).count();
-			//std::cout << "TIME = " << result << std::endl;
+			std::cout << "TIME = " << result << std::endl;
 			data << ", " << result;
 		}
 		data << std::endl;
