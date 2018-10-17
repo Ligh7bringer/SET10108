@@ -9,6 +9,8 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 
+set(CMAKE_CXX_FLAGS "-msse4 -mavx")
+
 # Add source to this project's executable.
 # lab 1
 add_executable (hello_world "lab01/hello_world.cpp" "lab01/hello_world.h")
@@ -41,3 +43,8 @@ add_executable (bubble_sort lab03/bubble_sort.cpp)
 add_executable (parallel_sort lab03/parallel_sort.cpp)
 add_executable (trapezoidal_rule lab03/trapezoidal_rule.cpp)
 add_executable (scheduling lab03/scheduling.cpp)
+
+#lab 4
+add_executable (simd lab04/simd.cpp)
+add_executable (simd_add lab04/simd_add.cpp)
+add_executable (normalise_vector lab04/normalise_vector.cpp)
