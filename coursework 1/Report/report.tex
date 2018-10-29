@@ -1,0 +1,227 @@
+% #######################################
+% ########### FILL THESE IN #############
+% #######################################
+\def\mytitle{Analysis and evaluation of techniques of parallelising a blockchain simulation}
+\def\mykeywords{concurrent, parallel, blockchain}
+\def\myauthor{Svetlozar Georgiev}
+\def\contact{40203970@live.napier.ac.uk}
+\def\mymodule{Concurrent and Parallel Systems (SET10108)}
+% #######################################
+% #### YOU DON'T NEED TO TOUCH BELOW ####
+% #######################################
+\documentclass[12pt, a4paper]{article}
+\renewcommand{\baselinestretch}{1.5} 
+\usepackage[a4paper,outer=1in,inner=1in,top=1in,bottom=1in]{geometry}
+\twocolumn
+\usepackage{graphicx}
+\graphicspath{{./images/}}
+\usepackage[hyphens]{url}
+%colour our links, remove weird boxes
+\usepackage[breaklinks,colorlinks,linkcolor={black},citecolor={blue!80!black},urlcolor={blue!80!black}]{hyperref}
+%Stop indentation on new paragraphs
+\usepackage[parfill]{parskip}
+%% Arial-like font
+\IfFileExists{uarial.sty}
+{
+    \usepackage[english]{babel}
+    \usepackage[T1]{fontenc}
+    \usepackage{uarial}
+    \renewcommand{\familydefault}{\sfdefault}
+}{
+    \GenericError{}{Couldn't find Arial font}{ you may need to install 'nonfree' fonts on your system}{}
+    \usepackage{lmodern}
+    \renewcommand*\familydefault{\sfdefault}
+}
+%Napier logo top right
+\usepackage{watermark}
+%Lorem Ipusm dolor please don't leave any in you final report ;)
+\usepackage{lipsum}
+\usepackage{xcolor}
+\usepackage{listings}
+%give us the Capital H that we all know and love
+\usepackage{float}
+%tone down the line spacing after section titles
+\usepackage{titlesec}
+%Cool maths printing
+\usepackage{amsmath}
+%PseudoCode
+\usepackage{algorithm2e}
+%lists
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{colortbl}
+\usepackage{dblfloatfix}
+\def\nespace{\hskip\fontdimen2\font\relax}
+
+\hyphenation{multi-processing}
+
+\titlespacing{\subsection}{0pt}{\parskip}{-3pt}
+\titlespacing{\subsubsection}{0pt}{\parskip}{-\parskip}
+\titlespacing{\paragraph}{0pt}{\parskip}{\parskip}
+\newcommand{\figuremacro}[5]{
+    \begin{figure}[#1]
+        \centering
+        \caption[#3]{\textbf{#3}#4}
+        \includegraphics[width=#5\columnwidth]{#2}
+        \label{fig:#2}
+    \end{figure}
+}
+
+\newcommand{\myparagraph}[1]{\paragraph{#1}\mbox{}\\} %put paragraph headings on their own line!
+
+\lstset{
+	escapeinside={/*@}{@*/}, language=C++,
+	basicstyle=\fontsize{8.5}{12}\selectfont,
+	numbers=left,numbersep=2pt,xleftmargin=2pt,frame=tb,
+    columns=fullflexible,showstringspaces=false,tabsize=4,
+    keepspaces=true,showtabs=false,showspaces=false,
+    backgroundcolor=\color{white}, morekeywords={inline,public,
+    class,private,protected,struct},captionpos=t,lineskip=-0.4em,
+	aboveskip=10pt, extendedchars=true, breaklines=true,
+	prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+	keywordstyle=\color[rgb]{0,0,1},
+	commentstyle=\color[rgb]{0.133,0.545,0.133},
+	stringstyle=\color[rgb]{0.627,0.126,0.941}
+}
+
+\thiswatermark{\centering \put(320,-38.0){\includegraphics[scale=0.7]{napier}} }
+\title{\mytitle}
+\author{\myauthor\hspace{1em}\\\contact\\Edinburgh Napier University\hspace{0.5em}-\hspace{0.5em}\mymodule}
+\date{}
+\hypersetup{pdfauthor=\myauthor,pdftitle=\mytitle,pdfkeywords=\mykeywords}
+\sloppy
+% #######################################
+% ########### START FROM HERE ###########
+% #######################################
+\begin{document}
+    \maketitle   
+    \clearpage
+
+    \begin{abstract}    
+        The aim of this report is to describe attempts at improving the performance of a blockchain simulation using CPU-based concurrency methods. The techniques used were: manual multithreading, OpenMP and \texttt{std::future}s.
+    \end{abstract}
+
+    \section{Introduction and Background}
+    The provided sequential program works as follows:
+    \begin{enumerate}[leftmargin=*]
+        \item A loop creates a set number of block objects. Certain information is stored in each block: its index, the time of its creation (to ensure the output of the program is always the same, this value is the same as the index), specific block data (a \texttt{string}) and the hash of the previous block in the chain.
+        \item A newly created block then starts "mining" a hash. This is achieved by incrementing a counter in a loop. Each time the counter is incremented, a string is created by joining all the information stored in the block and the counter. This string is then converted to a hash using the SHA256 encryption algorithm. 
+        \item It is then evaluated whether this is the correct hash. This is based on a variable called \textit{difficulty}. It determines how many zeroes have to be at the start of a hash.
+        \item If the correct hash is found, the program creates a new block and repeats the process. If the hash is incorrect, the program continues to increment the counter variable and generates new hashes until the correct one is found.
+    \end{enumerate}
+    
+    All of the tests described in the next sections were run on the same computer with specifications listed in \textbf{Table \ref{table:specs}}.
+
+    \begin{table}[!h]
+        \centering
+        \caption{\small{\textit{PC specifications}}}
+        \label{table:specs}
+        \begin{tabular}{|l|l|} 
+        \hline
+        {\cellcolor[rgb]{0.502,0.502,0.502}}CPU & {\cellcolor[rgb]{0.753,0.753,0.753}}Intel Core i5-8300H     \\ 
+        \hline
+        {\cellcolor[rgb]{0.502,0.502,0.502}}GPU & {\cellcolor[rgb]{0.753,0.753,0.753}}NVidia GTX 1050 Ti 4GB  \\ 
+        \hline
+        {\cellcolor[rgb]{0.502,0.502,0.502}}RAM & {\cellcolor[rgb]{0.753,0.753,0.753}}8 GB                    \\ 
+        \hline
+        {\cellcolor[rgb]{0.502,0.502,0.502}}OS  & {\cellcolor[rgb]{0.753,0.753,0.753}}Windows 10 Pro x64      \\
+        \hline
+        \end{tabular}
+    \end{table}
+
+    Additionally, all test programs were compiled in Release mode with compiler optimisations using the \textit{MSVC} compiler. All programs were run with 8 threads.
+
+    \section{Initial Analysis}
+    To analyse the initial program, the Visual Studio Profiler was used. Its CPU Sampling option provides detailed information about the resources each part of a program uses. The generated report can be used to easily spot the heaviest parts of the program. If they can be parallelised, the overall performance could be greatly improved.
+
+    \myparagraph{Results}
+    The results of the performance analysis showed that the most CPU intensive functions were:
+    
+    \paragraph{1. \texttt{block::mine\_block():}} The total CPU time of this function is 84.72\%. It includes a while loop which generates hashes until the correct hash is found. Each iteration of the loop is independent from the others so it could be a potential part of the program that could benefit from parallelisation. However, upon further investigation, it can be noticed that the call to \texttt{calculate\_hash()} is actually the most intensive part of this function.
+    \paragraph{2. \texttt{block::calculate\_hash():}} This function returns a hash based on the information stored in the current block. All the information is concatenated into a single string and then passed to the \texttt{sha256()} function. The concatenation is achieved through a \texttt{stringstream} which can be optimised (not using parallel techniques). However, the most CPU-intensive part of this function is the call to \texttt{sha256()} (68.37\% CPU time). 
+    \paragraph{3. \texttt{sha256():}} This function converts the passed string to a \textit{SHA256 hash}. The use of \texttt{sprintf()} is highlighted as very CPU-intensive by the profiler (60\% CPU time). Manual conversion can be implemented instead. Furthermore, the use of a for loop means \textit{OpenMP} can potentially be used. Additionally, SIMD instructions seem suitable to optimise the hashing algorithm.
+    \paragraph{4. \texttt{main.cpp:}} In the main file of the application, a loop creates a certain number of \texttt{block} objects. This could be a potential area that could be parallelised. However, every time a new block is created, it requires the hash of the previously mined block. This means there is a dependency between the elements of the blockchain. Parallelising such a data structure could be a difficult task. Sometimes this could result in the same performance as the initial sequential program as threads my have to wait for each other and the program essentially becomes sequential.
+
+    To test the effect the \texttt{difficulty} variable has on the speed of mining blocks, the program was modified to mine the first block with difficulty from 1 to 6. The results can be seen in \textbf{Figure \ref{fig:iterations}}. As it turns out, increasing the difficulty, increases the number of iterations (i.e. how many hashes have to be calculated before the right one is found) exponentially. 
+
+    To test the effect of the block data on performance, another modification was made to the program. A function that generates a random string of a given length \cite{randString} was added. A random alpha-numeric (including both lower and upper case characters) string containing special characters (\verb|!£$%^&*()-=+`#~|) is generated. A pseudo-random generator is used (\texttt{rand()}) to produce the same data every time the program is run so that consistent results can be collected. The first ten blocks were mined with difficulty set to 3. The program was run 10 times and the length of the data was increased by 10 every run. The results are shown in \textbf{Figure \ref{fig:datalen_chart}}. As it can be seen, the length of the string does not seem to have a direct effect on the time it takes to mine the first 10 blocks. It is more likely that the specific letters or special characters affect the performance.
+
+    \section{Methodology}    
+    \subsection{Non-parallel} 
+    \subsubsection{std::stringstream} As shown by the Visual Studio Profiler, the use of \texttt{std::stringstream} is quite inefficient. To find a suitable and faster replacement, a test program was written to compare the other string concatenation methods \cite{SOconcat} \cite{GHprogram}. The average results of 100 runs are shown in \textbf{Table \ref{table:concatResults}}.
+
+    \begin{table}[!h]
+        \centering
+        \caption{\small{\textit{Results of string concatenation comparison.}}}
+        \label{table:concatResults}
+        \begin{tabular}{|l|l|} 
+        \hline
+        \rowcolor[rgb]{0.502,0.502,0.502} Concatenation method & Average time                               \\ 
+        \hline
+        \rowcolor[rgb]{0.753,0.753,0.753} operator+            & \textcolor[rgb]{0.2,0.2,0.2}{6.02902 ms}   \\ 
+        \hline
+        \rowcolor[rgb]{0.753,0.753,0.753} operator+=           & \textcolor[rgb]{0.2,0.2,0.2}{1.201189 ms}  \\ 
+        \hline
+        \rowcolor[rgb]{0.753,0.753,0.753} append()             & \textcolor[rgb]{0.2,0.2,0.2}{1.18238 ms}   \\ 
+        \hline
+        \rowcolor[rgb]{0.753,0.753,0.753} std::stringstream    & \textcolor[rgb]{0.2,0.2,0.2}{43.6603}      \\
+        \hline
+        \end{tabular}
+    \end{table}
+
+    As it can be seen, \texttt{operator+=} and \texttt{append()} are the fastest, \texttt{append()} being slightly faster.
+
+    \subsubsection{sprintf()}
+    Another CPU-intensive part of the program is the \texttt{sha256::sha256()} function. It uses the \texttt{SHA256 algorithm} to generate a hash based on an input \texttt{std::string}. \texttt{sprintf()} is used in it to convert an array of \texttt{unsigned char}s generated by the algorithm to their Hexadecimal string representation. This can be done in a faster and safer \cite{buffOverflow} method. One such method is the use of a look-up table and manual conversion \cite{SOconversion} using a \texttt{Bitwise AND (\&)} and a right shift. This change not only improves the performance of the sequential program, but it enables the parallelisation of the loop where the change was made with \textit{OpenMP}.
+
+    \subsection{Multithreading}
+    Multithreading provides the ability for a single system to perform multiple independent activities in parallel, rather than sequentially, or one after the other \cite{williams2012c++}. 
+
+    After the initial analysis, it became obvious that the function \texttt{block::mine\_block()} could be parallelised. The first attempt made was using multiple threads to generate a number of hashes simultaneously. This is an embarrassingly parallel problem as the hashes do not depend on each other. The only variable that could cause a problem was \texttt{\_nonce} (the number of iterations) as each thread has to increment it. There are a number of possible solutions, such as using an \texttt{std::mutex} (or any of the mutex wrappers, e.g. \texttt{std::lock\_guard}), atomics, etc. The selected solution was changing \texttt{\_nonce} to an atomic variable. Atomic variables ensure well-defined behaviour when accessed from different threads simultaneously. For example, if one thread writes to an atomic object while another thread reads from it, no race conditions occur \cite{atomicc++}. The next step was creating a lambda function to be run in each thread. The function contains a while loop which calculates a hash and assigns it to a temporary variable. It is then checked whether the hash contains the required number of leading zeroes (based on the \texttt{\_difficulty} variable). If it does, a boolean variable (also \texttt{atomic}) is set to true. This is how the while loop is stopped. The same boolean variable is shared between all threads so they can stop working once one thread finds the correct hash.
+
+    \subsection{OpenMP}
+    \texttt{OpenMP} is a specification for a set of compiler directives, library routines, and environment variables that can be used to specify high-level parallelism in Fortran and C/C++ programs \cite{omp}. It provides an easier way of parallelising parts of a program without having to manually set up and manage threads. It greatly speeds up development time and is much simpler than manually creating and managing threads.
+
+    \texttt{OpenMP} provides an extremely simple method of parallelising \texttt{for loops} by adding the \verb|#pragma omp parallel for| directive before the creation of the loop. Using this method would require simply to convert the existing while loop to a for loop. However, for loops are range-based, i.e. it is required to know how many iterations are expected at the time of creation of the loop. Unfortunately, in this case it is impossible to know ahead of time how many iterations will be needed to find the right hash. It is possible to set the number of iterations to a large number and stop the loop when the correct hash is found. However, \texttt{OpenMP} does not allow the usage of the \texttt{break} statement inside parallel regions.
+
+    Instead, a \verb|#pragma omp parallel| directive was used to parallelise the existing while loop. An \texttt{std::atomic\_bool} was used to control when the loop stops. Similarly to the multithreaded version, the boolean is shared between the threads, so that when one thread sets it, all other threads stop.     
+    % Pseudocode for the modified \texttt{block::mine\_block()} function is shown in \textbf{Listing \ref{listing:omp}}.
+    % \lstinputlisting[label = listing:omp, language=C++, caption = Pseudocode for OpenMP parallelisation.]{./sourceCode/omp.cpp}
+
+    \texttt{OpenMP} was also used to parallelise the for loop in the \texttt{sha256::ssha256()} function. Without the changes to the function described in the previous subsection, the output of the hashes was incorrect: only a part of them was being shown. A solution to this problem was using the schedule statement:
+    \begin{lstlisting}
+    #pragma omp parallel for num_threads(8) schedule(static, 32) \end{lstlisting}
+    However, after removing \texttt{sprintf()} (as described above), the output was correct. All changes made to the function were adding a 
+    \begin{lstlisting}
+    #pragma omp parallel for num_threads(8) schedule(static, 1) \end{lstlisting} directive before the loop initialisation.
+
+    \subsection{std::future}
+    Asynchronous functions are executed at the same time as other operations (potentially on a separate thread) and their results are returned as \texttt{std::future}s \cite{futurec++}. The use of futures enable a thread to \texttt{return} a value and stop running. Unlike the multithreading solution, in this case no manual thread management is required, however the automatic management is expected to be slower.
+
+    The changes made to implement this version were very similar to the multithreaded version. A number of \texttt{std::future}s is created (based on the available hardware concurrency) using the \texttt{std::async()} call. It is explicitly specified that a separate thread should be launched with the \texttt{std::launch} argument. Each future runs the same \textit{lambda} function which generates hashes until the right one is found. A shared \texttt{std::atomic\_bool} controls when the threads stop. If a thread is stopped before it find a hash, it simply returns an empty string. The resulting futures are stored in a vector. It can then be checked if the results stored in the futures are empty. If they are, they are ignored. However, one of the futures contains the correct hash.
+
+    \section{Results and Discussions}
+    To compare the effects of the optimisations described above, each version was run 10 times. The first 10 blocks were mined with difficulty set to 3, 4, 5 and 6. The times for each implementation were then summed. The results are shown in \textbf{Figure \ref{fig:total_time}}. As it can be seen, the manually managed multithreaded implementation is the fastest. However, the difference between its total time and the total time of \texttt{OpenMP} version is very small - only 2 seconds. Futures are the next slowest implementation - 15 seconds slower. This is to be expected as they provide an extra layer of abstraction and do not allow any manual management. This introduces extra overhead and is less efficient. The slowest implementation, even slower than the sequential one, is the OpenMP optimisation in the \texttt{sha256()} function. This is also to be expected as the total number of iterations in this loop is very low and its CPU time is very low to begin with, meaning that no speedup can be expected. This is due to the fact that more overhead is introduced by the creation and management of threads by \texttt{OpenMP}. It should be noted that removing the \texttt{OpenMP} directive from this version yields much better results. 
+
+    Additionally, comparing the data for each of the difficulties separately, instead of summing it, showed interesting results. The total time to mine 10 blocks for each difficulty is shown in \textbf{Figure \ref{fig:diff_time}}. As it can be seen, when difficulty is set to 3, 4 and 5, \texttt{OpenMP} is the fastest version. However, the results of the multithreaded version are very similar and it is only slightly slower. When difficulty is set to 6, the multithreaded version is 2 seconds faster. This is expected for the multithreaded version as the cost of creation of threads and context switching is offset by the amount of data to be processed. However, the speed of \textit{OpenMP} at lower difficulties cannot be explained. A possible reason is the optimisations \textit{OpenMP} does in the background.
+
+    Furthermore, the speedup and efficiency values were calculated for each of the test programs. They can be seen in \textbf{Figure \ref{fig:su_eff}}. As it can be expected from the previous results, the speedup and efficiency values of the \texttt{std::thread} version are the highest, followed closely by the \textit{OpenMP} version.
+
+    \section{Conclusion}
+    To conclude, the blockchain simulation can definitely benefit from parallelisation. As it can be seen from the results of the tests, manual multithreading and \texttt{OpenMP} provide the best results - speedup values of over 5. If the aim were to achieve parallelisation in the least amount of development time, \texttt{OpenMP} appears to be the best solution. It allows the programmer to parallelise an existing program without having to make too many changes to existing code. If the aim is the best performance, manual multithreading seems to provide the best results. With fine tuning, it can definitely provide even better speedup and efficiency. The results from using \texttt{std::future}s are satisfactory. Due to the automatic management, however,it is to be expected for them to be slower. Lastly, parallelising the for loop in the \texttt{sha256()} function did not improve the performance at all due to the low performance impact in the baseline application. On the other hand, changing the method of byte conversion provided noticeable results. It can also be concluded that this program benefits from parallel optimisations at any difficulty and block data.
+
+    Possible future work would include the use of \texttt{SIMD instructions} to optimise the sha256 hashing algorithm and investigating whether its possible to parallelise the creation of blocks.
+
+    \bibliographystyle{ieeetr}
+    \bibliography{references}		
+    
+    \figuremacro{h}{datalen_chart}{}{\small{\textit{Relationship between length of data and total time to mine first 10 blocks.}}}{1}
+
+    \figuremacro{h}{iterations}{}{\small{\textit{Relationship between difficulty and number of iterations to mine the first block (in logarithmic scale, base 2)}}}{1}
+
+    \figuremacro{h}{total_time}{}{\small{\textit{Comparison of the total time (all difficulties summed) to mine 10 blocks of each version (time in logarithmic scale, base 2)}}}{1}
+
+    \figuremacro{h}{diff_time}{}{\small{\textit{Comparison of the total time to mine 10 blocks of each version per difficulty (time in logarithmic scale, base 2)}}}{1}
+
+    \figuremacro{h}{su_eff}{}{\small{\textit{Comparison of the speedup and efficiency of each implementation}}}{1}
+\end{document}
