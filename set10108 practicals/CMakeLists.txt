@@ -1,14 +1,19 @@
 ﻿# CMakeList.txt : CMake project for set10108 practicals, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.11)
 
 # Use OpenMP
-include(FindOpenMP)
+find_package(OpenMP)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 
+# Use MPI
+find_package(MPI REQUIRED)
+include_directories(${MPI_INCLUDE_PATH})
+
+# Use SIMD
 set(CMAKE_CXX_FLAGS "-msse4 -mavx")
 
 # Add source to this project's executable.
@@ -48,3 +53,29 @@ add_executable (scheduling lab03/scheduling.cpp)
 add_executable (simd lab04/simd.cpp)
 add_executable (simd_add lab04/simd_add.cpp)
 add_executable (normalise_vector lab04/normalise_vector.cpp)
+
+# lab5
+add_executable(hello lab05/hello.cpp)
+target_link_libraries(hello ${MPI_LIBRARIES})
+
+add_executable(send-receive lab05/send-receive.cpp)
+target_link_libraries(send-receive ${MPI_LIBRARIES})
+
+add_executable(monte_carlo_mpi lab05/monte_carlo_mpi.cpp)
+target_link_libraries(monte_carlo_mpi ${MPI_LIBRARIES})
+
+add_executable(scatter_gather lab05/scatter-gather.cpp)
+target_link_libraries(scatter_gather ${MPI_LIBRARIES})
+
+add_executable(broadcast lab05/broadcast.cpp)
+target_link_libraries(broadcast ${MPI_LIBRARIES})
+
+if(MPI_COMPILE_FLAGS)
+  set_target_properties(hello PROPERTIES
+    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+endif()
+
+if(MPI_LINK_FLAGS)
+  set_target_properties(hello PROPERTIES
+    LINK_FLAGS "${MPI_LINK_FLAGS}")
+endif()
