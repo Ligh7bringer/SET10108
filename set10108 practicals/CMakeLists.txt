@@ -54,7 +54,7 @@ add_executable (simd lab04/simd.cpp)
 add_executable (simd_add lab04/simd_add.cpp)
 add_executable (normalise_vector lab04/normalise_vector.cpp)
 
-# lab5
+# lab 5
 add_executable(hello lab05/hello.cpp)
 target_link_libraries(hello ${MPI_LIBRARIES})
 
@@ -79,3 +79,16 @@ if(MPI_LINK_FLAGS)
   set_target_properties(hello PROPERTIES
     LINK_FLAGS "${MPI_LINK_FLAGS}")
 endif()
+
+# lab 6
+add_executable(mandelbrot_mpi lab06/mandelbrot_mpi.cpp)
+target_link_libraries(mandelbrot_mpi ${MPI_LIBRARIES})
+
+add_executable(sort_mpi lab06/sort_mpi.cpp)
+target_link_libraries(sort_mpi ${MPI_LIBRARIES})
+
+add_executable(trapezoidal_mpi lab06/trapezoidal_mpi.cpp)
+target_link_libraries(trapezoidal_mpi ${MPI_LIBRARIES})
+
+add_executable(latency lab06/latency.cpp)
+target_link_libraries(latency ${MPI_LIBRARIES})
