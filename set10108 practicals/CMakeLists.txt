@@ -9,6 +9,10 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 
+find_package(OpenCL)
+include_directories(${OpenCL_INCLUDE_DIRS})
+link_libraries(${OpenCL_LIBRARIES})
+
 # Use MPI
 find_package(MPI REQUIRED)
 include_directories(${MPI_INCLUDE_PATH})
@@ -92,3 +96,13 @@ target_link_libraries(trapezoidal_mpi ${MPI_LIBRARIES})
 
 add_executable(latency lab06/latency.cpp)
 target_link_libraries(latency ${MPI_LIBRARIES})
+
+# lab 7
+add_executable(init_opencl lab07/init_opencl.cpp)
+add_executable(info_opencl lab07/info_opencl.cpp)
+
+add_executable(vec_add_ocl lab07/vec_add_ocl.cpp)
+configure_file(lab07/vec_add.cl vec_add.cl COPYONLY) # copy kernel file to build output
+
+add_executable(mat_mult lab07/mat_mult.cpp)
+configure_file(lab07/mat_mult.cl mat_mult.cl COPYONLY) # copy kernel file to build output

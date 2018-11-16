@@ -43,6 +43,7 @@ int main() {
 				MPI_Send(&send, 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
 			}
 		}
+
 		// get time
 		auto end = system_clock::now();
 		auto total = duration_cast<nanoseconds>(end - start).count();
@@ -50,9 +51,12 @@ int main() {
 		auto res = static_cast<double>(total) / 100000.0;
 		// divide by 2 to get latency
 		res /= 2.0;
+
 		// show result
-		if (my_rank == 0)
+		if (my_rank == 0) {
 			cout << res << endl;
+		}
+			
 	}
 
 	MPI_Finalize();
