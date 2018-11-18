@@ -17,8 +17,12 @@ link_libraries(${OpenCL_LIBRARIES})
 find_package(MPI REQUIRED)
 include_directories(${MPI_INCLUDE_PATH})
 
+# Use CUDA
+# enable_language doesn't seem to work?
+find_package(CUDA 9.0 REQUIRED)
+
 # Use SIMD
-set(CMAKE_CXX_FLAGS "-msse4 -mavx")
+# set(CMAKE_CXX_FLAGS "-msse4 -mavx")
 
 # Add source to this project's executable.
 # lab 1
@@ -106,3 +110,13 @@ configure_file(lab07/vec_add.cl vec_add.cl COPYONLY) # copy kernel file to build
 
 add_executable(mat_mult lab07/mat_mult.cpp)
 configure_file(lab07/mat_mult.cl mat_mult.cl COPYONLY) # copy kernel file to build output
+
+# lab 8
+cuda_add_executable(cuda_info lab08/cuda_info.cu)
+target_compile_features(cuda_info PUBLIC cxx_std_11)
+
+cuda_add_executable(vecadd_cuda lab08/vecadd_cuda.cu)
+target_compile_features(vecadd_cuda PUBLIC cxx_std_11)
+
+cuda_add_executable(matmult_cuda lab08/matmult_cuda.cu)
+target_compile_features(matmult_cuda PUBLIC cxx_std_11)

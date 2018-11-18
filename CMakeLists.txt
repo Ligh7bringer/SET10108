@@ -9,4 +9,4 @@ set (CMAKE_CXX_STANDARD 11)
 project ("set10108 practicals")
 
 # Include sub-projects.
-add_subdirectory ("set10108 practicals")
+add_subdirectory ("labs")
